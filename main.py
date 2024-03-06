@@ -4,103 +4,89 @@
 
 # add an algorithm to remove extra char
 
-import itertools
-import string
-import mystring as mystring
-import numpy as np
-import umap
-from nltk.tokenize import WordPunctTokenizer
-from matplotlib import pyplot as plt
-from IPython.display import clear_output
-from nltk.tokenize import sent_tokenize, word_tokenize
-import pymorphy2
-import math
-
-# write input model
-print('input path resume file:')
-input_file = input()
-# C:\Users\dimai\PycharmProjects\RTULAB_project\rezyume.txt
-input_data = list(open(input_file, encoding="utf-8"))  # problem!!! i m delite first line, because this code create
-# void input_data_vac_tok[0]
-data = list(open('myDataSet.txt', encoding="utf-8"))
-
-tokenizer = WordPunctTokenizer()
-# split to token
-data_tok = [tokenizer.tokenize(sentence.lower()) for sentence in data]
-input_data_tok = [tokenizer.tokenize(sentence.lower()) for sentence in input_data]  # 1 resume
-
-morph = pymorphy2.MorphAnalyzer()
-# split to vacancy
-data_vac_tok = []
-vac_tok = []
-for line in data_tok:
-    if line == ['-------------------']:
-        for i in range(len(vac_tok)):
-            vac_tok[i] = morph.parse(vac_tok[i])[0].normal_form  # one form word
-        data_vac_tok.append(vac_tok)
-        vac_tok = []
-    else:
-        vac_tok += line
-
-# del data_tok
-
-input_dictionary = {}
-dictionary = {}
-# count in input data set
-for i in range(len(input_data_tok)):
-    for line in input_data_tok[i]:
-        word = line
-        if word in input_dictionary:
-            input_dictionary[word] += 1
-        else:
-            input_dictionary[word] = 1
-
-mass_dictionary = []  # 1 vac - 1 dictionary. Key = word; Sum = count word in vac
-# count in full data set
-for i in range(len(data_vac_tok)):
-    local_dictionary = {}
-    for line in data_vac_tok[i]:
-        word = line
-        if word in dictionary:
-            dictionary[word] += 1
-        if word in local_dictionary:
-            local_dictionary[word] += 1
-        else:
-            local_dictionary[word] = 1
-            dictionary[word] = 1
-    mass_dictionary.append(local_dictionary)
-
-# we can calculate the meaning of a word on the go
-
-# create vector input data
-# create vector all vac
+# variable in with open = global variable!!!
 
 # idea: we can normal vector skils -
 # you can take the 64 most important words
 
 # math.log(numeric_expression,base_value)
 # use idf:
-weight_dictionary = {}
-for dict in dictionary:
-    c = 0
-    for i in range(len(mass_dictionary)):
-        if dict in mass_dictionary[i]:
-            c += 1
-    if c == 1:
-        weight_dictionary[dict] = len(mass_dictionary)  # log(22, 1) = error
-    else:
-        weight_dictionary[dict] = math.log(len(mass_dictionary), c)
 
+# use 2 model: kNN and liner network --> result = medium ans 2 model
+# kNN: - len kNN - hyper-parametric
 
-# count weight in 1 vac
-# TF * IDF
+import pymorphy2
+import math
+import numpy as np
+import re
+
+exceptions_set = set()  # insignificant words (spam)
+# on the first pass, the algorithm will collect stop words into a file,
+# and then read them from it - this will significantly speed up the work on subsequent runs
+with open(file='exceptions_set.txt', encoding="utf-8") as file:
+    for line in file:
+        split_line = line.split()
+        exceptions_set.update(split_line)
+
+print('input path resume file:')
+input_file = input()
+# C:\Users\dimai\PycharmProjects\RTULAB_project\rezyume.txt
+morph = pymorphy2.MorphAnalyzer()
+input_dictionary = {}  # Key = word; Sum = count word in vac
+with open(file=input_file, encoding="utf-8") as file:
+    for line in file:
+        str_line = re.split(r'[,( ).\n]', line.lower())  # split to token
+        # print(str_line)
+        for word in str_line:
+            token = morph.parse(word)[0].normal_form  # basic word form
+            if (len(token) != 0) and (not(token in exceptions_set)) and (token != '\n'):
+                # add in dict
+                if token in input_dictionary:
+                    input_dictionary[token] += 1
+                else:
+                    input_dictionary[token] = 1
+
+mass_dictionary = np.array([])  # 1 vac - 1 dictionary. Key = word; Sum = count word in vac
+dictionary = {}  # list of all words and count it
+answer_name = np.array([])  # vacancy name
+temp_dict = {}
+dictionary_count = {}  # key = word; sum = count of documents with this word
+# i m need: mass_weight_dictionary -> dict + mass_dict + weight_dict
+with open(file='myDataSet.txt', encoding="utf-8") as file:
+    for line in file:
+        if line == '-------------------\n':
+            mass_dictionary = np.append(mass_dictionary, temp_dict)  # add vacancy in mass_dictionary[i]
+            temp_dict = {}  # reset the dictionary
+        else:
+            if len(temp_dict) == 0:
+                answer_name = np.append(answer_name, line)  # add name
+            str_line = re.split(r'[,( ).\n]', line.lower())  # split to token
+            for word in str_line:
+                token = morph.parse(word)[0].normal_form  # basic word form
+                if (len(token) != 0) and (not(token in exceptions_set)) and (token != '\n'):
+                    if token in temp_dict:
+                        temp_dict[token] += 1
+                        dictionary[token] += 1
+                    elif token in dictionary:
+                        dictionary[token] += 1
+                    else:
+                        temp_dict[token] = 1
+                        dictionary[token] = 1
+
+            for word in temp_dict:
+                if word in dictionary_count:
+                    dictionary_count[word] += 1
+                else:
+                    dictionary_count[word] = 1
+
+# ....
+# tf idf:
 for i in range(len(mass_dictionary)):
-    for dict in mass_dictionary[i]:
-        mass_dictionary[i][dict] = (mass_dictionary[i][dict] / dictionary[dict]) * weight_dictionary[dict]
-
-def similarity_vector(): # comparison of two vectors with skill values
-    return float
-
-# use 2 model: kNN and liner network ----> result = medium ans 2 model
-
-# kNN:
+    for word in mass_dictionary[i]:
+        if dictionary_count[word] == 1:
+            mass_dictionary[i][word] = (mass_dictionary[i][word] / dictionary[word]) * \
+                                       len(mass_dictionary)
+        else:
+            mass_dictionary[i][word] = (mass_dictionary[i][word] / dictionary[word]) * \
+                                        math.log(len(mass_dictionary), dictionary_count[word])
+print(mass_dictionary)
