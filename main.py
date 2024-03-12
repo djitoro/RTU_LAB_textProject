@@ -20,6 +20,8 @@ import math
 import numpy as np
 import re
 
+# nested dictionaries - ?
+
 exceptions_set = set()  # insignificant words (spam)
 # on the first pass, the algorithm will collect stop words into a file,
 # and then read them from it - this will significantly speed up the work on subsequent runs
@@ -81,7 +83,10 @@ with open(file='myDataSet.txt', encoding="utf-8") as file:
 
 # ....
 # tf idf:
-for i in range(len(mass_dictionary)):
+index_ans = 0
+value_ans = 0
+for i in np.arange(len(mass_dictionary)):
+    temp_value_ans = 0
     for word in mass_dictionary[i]:
         if dictionary_count[word] == 1:
             mass_dictionary[i][word] = (mass_dictionary[i][word] / dictionary[word]) * \
@@ -89,4 +94,22 @@ for i in range(len(mass_dictionary)):
         else:
             mass_dictionary[i][word] = (mass_dictionary[i][word] / dictionary[word]) * \
                                         math.log(len(mass_dictionary), dictionary_count[word])
-print(mass_dictionary)
+        # add in spam-bloc
+        if mass_dictionary[i][word] < 0.1:  # edit params and my dataset:
+            exceptions_set.add(word)
+        # kNN: (not an effective option)
+        temp_value_ans += mass_dictionary[i][word]
+    if temp_value_ans > value_ans:
+        value_ans = temp_value_ans
+        index_ans = i
+print(answer_name[index_ans])
+
+# write in file: add spam word
+# use mode = 'a'
+with open(file='exceptions_set.txt', mode='w', encoding="utf-8") as file:
+    file.writelines([word + ' ' for word in exceptions_set])
+
+# add split into bath and add modul parallel computing
+# create data set on one companies
+
+
