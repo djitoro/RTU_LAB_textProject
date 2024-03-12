@@ -1,7 +1,29 @@
-# RTU_LAB_textProject
-## main idaes: 
-idf - this method is much easier than various transformers (for example BERT).
-We make an initial distribution of word weights based on the frequency of their occurrence in the text and the individuality for a vacancy
+# Selection of vacancies
+___
+## Main idaes: 
+### 1.TF-IDF
+  Sentence A: the car is driven on the road
+  
+  Sentence B: the truck is driven on the highway
+  
+  ![tf-idf](https://github.com/djitoro/RTU_LAB_textProject/blob/main/pictures/tf-idf-4.png)
+      
+      we consider the “weight” of a word in the subtext
+ 
+  I used this particular model because on relatively small data sets it is more efficient in terms of memory and processor load (compared to transformers)
+### 2.kNN
+  test 
+### 3.list of spam-word
+  test
+___ 
+## Criteria: 
+### data preparation:
+test 
+### System architecture:
+test
+### System accuracy
+test
+
 
 As a result, we get a vector for each vacancy and a vector for the resume
 ___
