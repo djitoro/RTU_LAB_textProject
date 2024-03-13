@@ -1,16 +1,6 @@
 # loss function - ?
-
-# idea for optimaiz: replase list to numpy
-
-# add an algorithm to remove extra char
-
-# variable in with open = global variable!!!
-
-# idea: we can normal vector skils -
-# you can take the 64 most important words
-
-# math.log(numeric_expression,base_value)
-# use idf:
+# typo check!!
+# divided into training/working model
 
 # use 2 model: kNN and liner network --> result = medium ans 2 model
 # kNN: - len kNN - hyper-parametric
@@ -19,6 +9,38 @@ import pymorphy2
 import math
 import numpy as np
 import re
+
+import datetime
+# pip install pyenchant
+import enchant  # при импроте пишем именно enchant (не pyenchant)
+import difflib
+
+woi = "игро"
+sim = dict()
+
+dictionary = enchant.Dict("ru_Ru")
+suggestions = set(dictionary.suggest(woi))
+s = 0
+for word in suggestions:
+    measure = difflib.SequenceMatcher(None, woi, word).ratio()
+    sim[measure] = word
+    s += 1
+print(s)
+print(sim)
+print("Correct word is:", sim[max(sim.keys())])
+
+print(dictionary.check("река"))
+
+
+print('Exit - -1')
+print('To train the model press - 0')
+print('To operate the model press - 1')
+
+ans_q = int(input())
+if ans_q == 0:
+    pass
+
+start = datetime.datetime.now()
 
 # nested dictionaries - ?
 
@@ -33,6 +55,7 @@ with open(file='exceptions_set.txt', encoding="utf-8") as file:
 print('input path resume file:')
 input_file = input()
 # C:\Users\dimai\PycharmProjects\RTULAB_project\rezyume.txt
+
 morph = pymorphy2.MorphAnalyzer()
 input_dictionary = {}  # Key = word; Sum = count word in vac
 with open(file=input_file, encoding="utf-8") as file:
@@ -47,19 +70,26 @@ with open(file=input_file, encoding="utf-8") as file:
                     input_dictionary[token] += 1
                 else:
                     input_dictionary[token] = 1
+print(input_dictionary)
 
+print('input path vac file:')
+input_file = input()
+# C:\Users\dimai\PycharmProjects\RTULAB_project\vakansii.txt
 mass_dictionary = np.array([])  # 1 vac - 1 dictionary. Key = word; Sum = count word in vac
 dictionary = {}  # list of all words and count it
 answer_name = np.array([])  # vacancy name
 temp_dict = {}
 dictionary_count = {}  # key = word; sum = count of documents with this word
 # i m need: mass_weight_dictionary -> dict + mass_dict + weight_dict
-with open(file='myDataSet.txt', encoding="utf-8") as file:
-    for line in file:
-        if line == '-------------------\n':
+with open(file=input_file, encoding="utf-8") as file:
+    f = file.readlines()
+    last_line = f[-1]
+    for line in f:
+        if line is last_line:
             mass_dictionary = np.append(mass_dictionary, temp_dict)  # add vacancy in mass_dictionary[i]
             temp_dict = {}  # reset the dictionary
-        else:
+
+        elif line != '-------------------\n':
             if len(temp_dict) == 0:
                 answer_name = np.append(answer_name, line)  # add name
             str_line = re.split(r'[,( ).\n]', line.lower())  # split to token
@@ -81,6 +111,11 @@ with open(file='myDataSet.txt', encoding="utf-8") as file:
                 else:
                     dictionary_count[word] = 1
 
+        elif line == '-------------------\n':
+            mass_dictionary = np.append(mass_dictionary, temp_dict)  # add vacancy in mass_dictionary[i]
+            temp_dict = {}  # reset the dictionary
+
+print(answer_name)
 # ....
 # tf idf:
 index_ans = 0
@@ -99,10 +134,13 @@ for i in np.arange(len(mass_dictionary)):
             exceptions_set.add(word)
         # kNN: (not an effective option)
         temp_value_ans += mass_dictionary[i][word]
-    if temp_value_ans > value_ans:
+    if temp_value_ans > value_ans:  # add minimum threshold
         value_ans = temp_value_ans
         index_ans = i
+
 print(answer_name[index_ans])
+print(len(mass_dictionary))
+print(mass_dictionary)
 
 # write in file: add spam word
 # use mode = 'a'
@@ -112,4 +150,5 @@ with open(file='exceptions_set.txt', mode='w', encoding="utf-8") as file:
 # add split into bath and add modul parallel computing
 # create data set on one companies
 
-
+finish = datetime.datetime.now()
+print('Время работы: ' + str(finish - start))
