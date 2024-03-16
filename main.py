@@ -1,10 +1,3 @@
-# loss function - ?
-# typo check!!
-# divided into training/working model
-
-# use 2 model: kNN and liner network --> result = medium ans 2 model
-# kNN: - len kNN - hyper-parametric
-
 import pymorphy2
 import math
 import numpy as np
@@ -12,7 +5,7 @@ import re
 
 import datetime
 # pip install pyenchant
-import enchant  # при импроте пишем именно enchant (не pyenchant)
+import enchant
 import difflib
 morph = pymorphy2.MorphAnalyzer()
 
@@ -32,16 +25,9 @@ def input_one_block(file):  # a function that reads 1 job opening or resume and 
                     split_dataset_dictionary[token] = 1
     return split_dataset_dictionary
 
-'''
-mass_dictionary = np.array([])  # 1 vac - 1 dictionary. Key = word; Sum = count word in vac
-dictionary = {}  # list of all words and count it
-answer_name = np.array([])  # vacancy name
-temp_dict = {}
-dictionary_count = {}  # key = word; sum = count of documents with this word
-'''
 
+def input_bloc_vac(file):  # adding a list of vacancies and dividing them into the necessary variables
 
-def input_bloc_vac(file):
     def_mass_dictionary = np.array([])  # 1 vac - 1 dictionary. Key = word; Sum = count word in vac
     def_dictionary = {}  # list of all words and count it
     def_answer_name = np.array([])  # vacancy name
@@ -126,13 +112,6 @@ ans_q = int(input())  # variable for writing commands
 use_most_impotent_dict = {}
 while True:
     if ans_q == 0:
-        '''
-        exceptions_set = set()  # insignificant words (spam)
-        dictionary_for_come_back = {}
-        # we take a large set of data
-        # (job texts from the Internet) so that our model learns to identify important and unimportant words
-        # you need a corpus of random abstracts to learn how to separate common words from special ones
-        '''
         #  The model is trained by weighting words.
         #  General-purpose words receive low weight,
         #  or even end up in the exclusion list
@@ -160,21 +139,21 @@ while True:
                 if past_line == 'Вакансия:\n':
                     right_answer = np.append(right_answer, line)
                 past_line = line
-        print(right_answer)
+
+        # print(right_answer)
 
         print('enter the path to the file with a complete list of vacancies to select:')
         input_file = input()  # C:\Users\dimai\PycharmProjects\RTULAB_project\vakansii.txt
         with open(file=input_file, encoding="utf-8") as file:
             dictionary, mass_dictionary, dictionary_count, answer_name = input_bloc_vac(file)
-        print(dictionary)
+        # print(dictionary)
 
-        hyperpar = 0  # threshold for words to enter the spam list == max value
         for word in training_dataset_dictionary:
             if word in dictionary:
                 dictionary[word] += training_dataset_dictionary[word]
             else:
                 dictionary[word] = training_dataset_dictionary[word]
-        print(dictionary)
+        # print(dictionary)
 
         # tf idf:
         index_ans = 0
@@ -188,24 +167,18 @@ while True:
                 else:
                     mass_dictionary[i][word] = (mass_dictionary[i][word] / dictionary[word]) * \
                                                math.log(len(mass_dictionary), dictionary_count[word])
-                '''
-                # kNN: (not an effective option)
-                temp_value_ans += mass_dictionary[i][word]
-            if temp_value_ans > value_ans:  # add minimum threshold
-                value_ans = temp_value_ans
-                index_ans = i
-                '''
         # go from the reverse:
         # from one to more important words, adding the rest to add from the spam list
-        print()
-        print(mass_dictionary[0])
+
+        # print(mass_dictionary[0])
         for iterations in range(len(right_answer)):
             print('enter the path to the file with one resume:')
             print('ATTENTION: the resume must be from the file that was entered above')
             input_file = input()  # C:\Users\dimai\PycharmProjects\RTULAB_project\rezyume.txt
             with open(file=input_file, encoding="utf-8") as file:
                 input_one_vacancy_dictionary = input_one_block(file)
-            print(input_one_vacancy_dictionary)
+
+            # print(input_one_vacancy_dictionary)
 
             # None class vacancies:
             # after training on classified data,
@@ -215,10 +188,12 @@ while True:
             most_impotent_dict = {}
             most_impotent_dict = choosing_important_words(mass_dictionary, most_impotent_dict)
             # list of sufficient words to define a class
-            print('most_impotent_dict')
-            print(most_impotent_dict)
+
+            # print('most_impotent_dict')
+            # print(most_impotent_dict)
+
             # we take one most significant word from each vacancy
-            print('ans1:')
+            # print('ans1:')
             # first hypothetical answer:
             possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict)
             training_flag = False
@@ -255,7 +230,7 @@ while True:
         input_file = input()  # C:\Users\dimai\PycharmProjects\RTULAB_project\rezyume.txt
         with open(file=input_file, encoding="utf-8") as file:
             input_one_vacancy_dictionary = input_one_block(file)
-        print(input_one_vacancy_dictionary)
+        # print(input_one_vacancy_dictionary)
 
         possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name,
                                                   use_most_impotent_dict)
@@ -263,44 +238,3 @@ while True:
 
     if ans_q == -1:
         break
-
-start = datetime.datetime.now()
-
-# nested dictionaries - ?
-
-exceptions_set = set()  # insignificant words (spam)
-# on the first pass, the algorithm will collect stop words into a file,
-# and then read them from it - this will significantly speed up the work on subsequent runs
-with open(file='exceptions_set.txt', encoding="utf-8") as file:
-    for line in file:
-        split_line = line.split()
-        exceptions_set.update(split_line)
-
-# write in file: add spam word
-# use mode = 'a'
-with open(file='exceptions_set.txt', mode='w', encoding="utf-8") as file:
-    file.writelines([word + ' ' for word in exceptions_set])
-
-# add split into bath and add modul parallel computing
-# create data set on one companies
-
-finish = datetime.datetime.now()
-print('Время работы: ' + str(finish - start))
-
-woi = "игра"
-sim = dict()
-
-dictionary = enchant.Dict("ru_Ru")
-suggestions = set(dictionary.suggest(woi))
-s = 0
-for word in suggestions:
-    measure = difflib.SequenceMatcher(None, woi, word).ratio()
-    sim[measure] = word
-    s += 1
-print(s)
-print(sim)
-print("Correct word is:", sim[max(sim.keys())])
-
-print(dictionary.check("река"))
-
-
