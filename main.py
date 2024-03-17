@@ -2,11 +2,6 @@ import pymorphy2
 import math
 import numpy as np
 import re
-
-import datetime
-# pip install pyenchant
-import enchant
-import difflib
 morph = pymorphy2.MorphAnalyzer()
 
 
@@ -84,12 +79,14 @@ def choosing_important_words(mass_dict, most_impotent_d):
         else:
             most_impotent_d[most_impotent_word] = most_impotent_value
 
+        del mass_dict[i][most_impotent_word]  # remove written words from the list
+
     return most_impotent_d
 
 
 # kNN:
 # use matrix multiplication (via dot function in np) - ?
-def choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict):
+def choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict, min_value):
     ans_index = 0
     max_ans_value = 0
 
@@ -101,8 +98,10 @@ def choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answe
         if temp_ans_value > max_ans_value:
             ans_index = i
             max_ans_value = temp_ans_value
-
-    return answer_name[ans_index]
+    if max_ans_value < min_value:
+        return 'None\n'
+    else:
+        return answer_name[ans_index]
 
 
 print('Exit - -1')
@@ -110,8 +109,10 @@ print('To train the model press - 0')
 print('To operate the model press - 1')
 ans_q = int(input())  # variable for writing commands
 use_most_impotent_dict = {}
+use_min_ans_value = -1
 while True:
     if ans_q == 0:
+        min_ans_value = 0
         #  The model is trained by weighting words.
         #  General-purpose words receive low weight,
         #  or even end up in the exclusion list
@@ -140,14 +141,14 @@ while True:
                     right_answer = np.append(right_answer, line)
                 past_line = line
 
-        # print(right_answer)
+        print(right_answer)
 
         print('enter the path to the file with a complete list of vacancies to select:')
         input_file = input()  # C:\Users\dimai\PycharmProjects\RTULAB_project\vakansii.txt
         with open(file=input_file, encoding="utf-8") as file:
             dictionary, mass_dictionary, dictionary_count, answer_name = input_bloc_vac(file)
         # print(dictionary)
-
+        print(answer_name)
         for word in training_dataset_dictionary:
             if word in dictionary:
                 dictionary[word] += training_dataset_dictionary[word]
@@ -158,6 +159,9 @@ while True:
         # tf idf:
         index_ans = 0
         value_ans = 0
+        count_mass_dictionary = mass_dictionary  # number of words in this vacancy
+
+        # Let's write the words in mass_dictionary according to their weights
         for i in np.arange(len(mass_dictionary)):
             # temp_value_ans = 0
             for word in mass_dictionary[i]:
@@ -195,25 +199,38 @@ while True:
             # we take one most significant word from each vacancy
             # print('ans1:')
             # first hypothetical answer:
-            possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict)
-            training_flag = False
+            possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, count_mass_dictionary, answer_name,
+                                                      most_impotent_dict, min_ans_value)
+            training_flag = 0
             last_len_imposible_dict = 0
             # you can go backwards and determine the minimum number of words for an accurate definition
             while last_len_imposible_dict != len(most_impotent_dict):
-                if possible_answer != right_answer[iterations]:
-                    most_impotent_dict = choosing_important_words(mass_dictionary, most_impotent_dict)
-                    possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary,
-                                                              answer_name, most_impotent_dict)
-                else:
-                    training_flag = True
-                    break
-                    # stop stady and come back
+                # if the resume has the None class,
+                # then we gradually increase the parameter of the minimum level of completion for the vacancy
+                if right_answer[iterations] == 'None\n':
+                    if possible_answer == 'None\n':
+                        training_flag += 1
+                        break
+                    min_ans_value += 0.1
+                    possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, count_mass_dictionary,
+                                                              answer_name, most_impotent_dict, min_ans_value)
 
-            if not training_flag:
+                # we increase the number of significant words until we get the desired answer
+                elif possible_answer != right_answer[iterations]:
+                    most_impotent_dict = choosing_important_words(mass_dictionary, most_impotent_dict)
+                    possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, count_mass_dictionary,
+                                                              answer_name, most_impotent_dict, min_ans_value)
+                else:
+                    training_flag += 1
+                    break
+            # if more than half of the answers are guessed,
+            # the model will be considered trained
+            if training_flag < (len(answer_name)/2):
                 print('the data set is insufficient for training')
                 # training requires a large number of resumes
             else:
-                use_most_impotent_dict = most_impotent_dict
+                use_min_ans_value = min_ans_value
+                use_most_impotent_dict = most_impotent_dict  # we transfer the dictionary of important words to work
         print('Exit - -1')
         print('to repeat training press - 0')
         print('To operate the model press - 1')
@@ -233,8 +250,12 @@ while True:
         # print(input_one_vacancy_dictionary)
 
         possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name,
-                                                  use_most_impotent_dict)
+                                                  use_most_impotent_dict, use_min_ans_value)
         print(possible_answer)
 
+    print('Exit - -1')
+    print('to repeat training press - 0')
+    print('To operate the model press - 1')
+    ans_q = int(input())
     if ans_q == -1:
         break
