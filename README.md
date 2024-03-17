@@ -25,7 +25,7 @@ ___
   
   1.you make the first sentence of the answer: 
   ```python
-  def choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict):
+  def choosing_correct_answer(input_one_vacancy_dictionary, mass_dictionary, answer_name, most_impotent_dict, min_value):
     ans_index = 0
     max_ans_value = 0
 
@@ -37,26 +37,15 @@ ___
         if temp_ans_value > max_ans_value:
             ans_index = i
             max_ans_value = temp_ans_value
-
-    return answer_name[ans_index]
-  ```
+    if max_ans_value < min_value:
+        return 'None\n'
+    else:
+        return answer_name[ans_index]
+```
 
 2. if the answer is correct, then we move on to point 1
-   ```python
-            possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, count_mass_dictionary, answer_name, most_impotent_dict)
-            training_flag = False
-            last_len_imposible_dict = 0
-            # you can go backwards and determine the minimum number of words for an accurate definition
-            while last_len_imposible_dict != len(most_impotent_dict):
-                if possible_answer != right_answer[iterations]:
-                    most_impotent_dict = choosing_important_words(mass_dictionary, most_impotent_dict)
-                    possible_answer = choosing_correct_answer(input_one_vacancy_dictionary, count_mass_dictionary,
-                                                              answer_name, most_impotent_dict)
-                else:
-                    training_flag = True
-                    break
-   ```
-4. if not, then we add elements with the maximum weight value to the list of important words and calculate the answer again
+   
+3. if not, then we add elements with the maximum weight value to the list of important words and calculate the answer again
    ```python
    def choosing_important_words(mass_dict, most_impotent_d):
     for i in range(len(mass_dict)):
@@ -77,28 +66,38 @@ ___
    ```
 5. if we took into account absolutely all the words, but still did not get the correct answer, then the program suggests repeating the training on a larger data set
    ```python
-   if not training_flag:
-         print('the data set is insufficient for training')
+   if training_flag < (len(answer_name)/2):
+      print('the data set is insufficient for training')
+      # training requires a large number of resumes      
    ```
 6. we transfer the dictionary of weights to work
    ```python
-    else:
-         use_most_impotent_dict = most_impotent_dict  # we transfer the dictionary of important words to work
+   else:
+      use_min_ans_value = min_ans_value
+      use_most_impotent_dict = most_impotent_dict
+    # we transfer the dictionary of important words to work
    ```
 ___ 
 ## Data: 
 ### data preparation:
-test 
-### System architecture:
-test
-### System accuracy
-test
+We vacancies and resumes for dictionaries from individual words, we reduce words to lower case and to the basic form
 
+But I abandoned the typo check in favor of greater code efficiency and the not entirely correct operation of this module 
+P.S. it is in the last 2 commits
 
-As a result, we get a vector for each vacancy and a vector for the resume
+### data requirements:
+Corresponds to the technical requirements The data should be expanded taking into account the specified style
+
 ___
+## Ideas for improvement: 
+### Model: 
+provided unlimited computing resources, it is possible to create an ensemble of models - kNN and a classical transformer
 
-**test**
-*test2*
+However, for this it will also be necessary to significantly increase the training data set.
+### Interface: 
+Add a window for interaction and the ability to drag and drop files
+
+As well as the ability to upload a single file for the full cycle of work
+___
 
 :wink:
