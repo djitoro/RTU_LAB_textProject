@@ -6,7 +6,7 @@ ___
   
   Sentence B: the truck is driven on the highway
   
-  ![tf-idf](https://github.com/djitoro/RTU_LAB_textProject/blob/main/pictures/tf-idf-4.png)
+  ![tf-idf](https://github.com/djitoro/RTU_LAB_textProject/blob/master/pict/tf-idf-4.png)
       
       we consider the “weight” of a word in the subtext
  
@@ -14,7 +14,7 @@ ___
 ### 2.kNN
   The most suitable vacancy will be determined using the nearest neighbors method. Since the number of significant words in the resume text is quite small, this method will allow you to determine answers much faster than linear and nonlinear classifiers
 
-   ![kNN](https://github.com/djitoro/RTU_LAB_textProject/blob/main/pictures/kNN.png)
+   ![kNN](https://github.com/djitoro/RTU_LAB_textProject/blob/master/pict/kNN.png)
 
       a resume is a point in space N, 
       and the desired vacancy is the one closest to this point
